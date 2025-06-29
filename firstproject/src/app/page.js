@@ -6,9 +6,12 @@ export default function Home() {
   const prompt = "Write quote of the day.";
 
   const [output, setOutput] = useState('This is a nextjs project');
+  const [loading, setLoading] = useState(false);
 
   const generateText = async () => {
-    console.log("clicked");
+    
+    setLoading(true);
+
     try{
       const response = await fetch("/api/generate", {
         method: 'POST',
@@ -32,11 +35,14 @@ export default function Home() {
     catch(err){
       console.error(err)
     }
+    finally{
+      setLoading(false);
+    }
   }
 
   return (
     <div>    
-      <p onClick={generateText}>{output}</p>
+      {loading ? (<p className="text-blue-500">Loading...</p>):(<p onClick={generateText}>{output}</p>)}
       <MyButton />
     </div>
   );
