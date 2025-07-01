@@ -5,19 +5,42 @@ export async function POST(req, res){
     try{
         const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-        const model = genAI.getGenerativeModel({model: "gemini-2.5-pro"});
-
         const data = await req.json();
-        
-        const prompt = data.body;
 
-        const result = await model.generateContent(prompt);
+
+        const model = genAI.getGenerativeModel({
+            model: "gemini-2.5-flash",
+            generationConfig: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            unternehmen: {
+                                type: "string",
+                            },
+                            partnerschule: {
+                                type: "string",
+                            }
+                        },
+                        required: ["unternehmen", "partnerschule"]
+                    }
+                }
+            }
+        })
+
+        const result = await model.generateContent(data.body);
         const response = await result.response;
-        const output = await response.text();
+        const output = response.text();
 
         return NextResponse.json({output: output});
     }
     catch(err){
         console.error(err);
+        return NextResponse.json(
+            {error: "Failed to generate content"},
+            {status: 500}
+        )
     }
 }
