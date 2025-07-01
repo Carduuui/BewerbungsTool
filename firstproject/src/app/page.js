@@ -1,6 +1,7 @@
 'use client'
 import {useState} from "react";
 import styles from "./globals.css";
+import PartnershipTable from "./partnership-table";
 
 export default function Home() {
   const prompt = "Write quote of the day.";
@@ -43,13 +44,7 @@ export default function Home() {
   return (
     <div>    
       {loading ? (<p className="text-blue-500">Loading...</p>):(<p onClick={generateText}>{output}</p>)}
-      <MyButton />
+      <PartnershipTable/>
     </div>
-  );
-}
-
-function MyButton(){
-  return(
-    <button className="btnStyle border-solid text-red-500 border-2">I'm a button</button>
   );
 }
