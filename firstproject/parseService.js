@@ -1,5 +1,6 @@
 import Parse from "parse/node";
 
+//verbindung zu back4app
 const PARSE_APPLICATION_ID = process.env.APPLICATION_ID;
 const PARSE_JAVASCRIPT_KEY = process.env.JAVASCRIPT_KEY;
 const PARSE_HOST_URL = "https://parseapi.back4app.com/";

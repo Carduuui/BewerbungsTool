@@ -1,5 +1,6 @@
 import Parse from "../../../../parseService";
 
+//befüllung DB
 export async function POST(req, res){
     try{
         const body = await req.json();

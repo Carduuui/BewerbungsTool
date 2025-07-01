@@ -77,8 +77,8 @@ Hinweis: Die dargestellten Zeichen enthalten keine Umlaute (ä, ö, ü oder ß),
   const [output, setOutput] = useState('This is a nextjs project');
   const [loading, setLoading] = useState(false);
 
-  const [unternehmen, setUnternehmen] = useState(sampleData);
 
+  //fetch Gemini API
   const generateText = async () => {
     
     setLoading(true);
@@ -111,6 +111,7 @@ Hinweis: Die dargestellten Zeichen enthalten keine Umlaute (ä, ö, ü oder ß),
     }
   }
 
+  //fetch für DB befüllen
   const post_data_table = async () =>{
     try{
       const response = await fetch("/api/post_table", {
@@ -135,7 +136,7 @@ Hinweis: Die dargestellten Zeichen enthalten keine Umlaute (ä, ö, ü oder ß),
   return (
     <div>    
       {loading ? (<p className="text-blue-500">Loading...</p>):(<p onClick={generateText}>{output}</p>)}
-      <PartnershipTable  data={unternehmen}/>
+      <PartnershipTable  data={sampleData}/>
     </div>
   );
 }

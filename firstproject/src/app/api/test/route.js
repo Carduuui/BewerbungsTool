@@ -1,5 +1,6 @@
 import Parse from "../../../../parseService";
 
+//testen Verbindung zu back4app
 export async function GET(request) {
     try {
       const query = new Parse.Query('_User');
