@@ -1,10 +1,10 @@
 'use client'
 import {useState} from "react";
 import styles from "./globals.css";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
+import PartnershipTable from "./partnership-table";
 
 export default function Home() {
+  // Sample data for the table
   const sampleData = [
     {
       id: 1,
@@ -52,26 +52,13 @@ export default function Home() {
       bewerbungsstatus: "Angenommen",
     },
   ]
-  
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case "Angenommen":
-        return <Badge className="bg-green-600 hover:bg-green-700">{status}</Badge>
-      case "Abgelehnt":
-        return <Badge className="bg-red-600 hover:bg-red-700">{status}</Badge>
-      case "In Bearbeitung":
-        return <Badge className="bg-yellow-600 hover:bg-yellow-700">{status}</Badge>
-      case "Wartend":
-        return <Badge className="bg-gray-600 hover:bg-gray-700">{status}</Badge>
-      default:
-        return <Badge className="bg-gray-600 hover:bg-gray-700">{status}</Badge>
-    }
-  }
 
   const prompt = "Write quote of the day.";
 
   const [output, setOutput] = useState('This is a nextjs project');
   const [loading, setLoading] = useState(false);
+
+  const [unternehmen, setUnternehmen] = useState(sampleData);
 
   const generateText = async () => {
     
@@ -105,40 +92,31 @@ export default function Home() {
     }
   }
 
+  const post_data_table = async () =>{
+    try{
+      const response = await fetch("/api/post_table", {
+        method: "Post",
+        headers:{
+          'Content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: 1,
+          unternehmen: "test"
+        })
+      })
+
+      const result = await response.json();
+      console.log(result);
+    }
+    catch(err){
+      console.error(err);
+    }
+  }
+
   return (
     <div>    
-      {loading ? (<p className="text-blue-500">Loading...</p>):(<p onClick={generateText}>{output}</p>)}
-          <div className="min-h-screen bg-gray-900 p-6">
-            <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-700 hover:bg-gray-700 border-b border-gray-600">
-                    <TableHead className="text-white font-semibold">Unternehmen</TableHead>
-                    <TableHead className="text-white font-semibold">Partnerschule</TableHead>
-                    <TableHead className="text-white font-semibold">Unternehmen Standort</TableHead>
-                    <TableHead className="text-white font-semibold">Partnerschule Standort</TableHead>
-                    <TableHead className="text-white font-semibold">Kernkompetenz Unternehmen</TableHead>
-                    <TableHead className="text-white font-semibold">Bewerbungsstatus</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sampleData.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      className="bg-gray-800 hover:bg-gray-750 border-b border-gray-700 transition-colors"
-                    >
-                      <TableCell className="text-white font-medium">{row.unternehmen}</TableCell>
-                      <TableCell className="text-gray-300">{row.partnerschule}</TableCell>
-                      <TableCell className="text-gray-300">{row.unternehmensStandort}</TableCell>
-                      <TableCell className="text-gray-300">{row.partnerschuleStandort}</TableCell>
-                      <TableCell className="text-gray-300">{row.kernkompetenz}</TableCell>
-                      <TableCell>{getStatusBadge(row.bewerbungsstatus)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+      {loading ? (<p className="text-blue-500">Loading...</p>):(<p onClick={post_data_table}>{output}</p>)}
+      <PartnershipTable  data={unternehmen}/>
     </div>
   );
 }
