@@ -1,4 +1,6 @@
+import flask
 from playwright.sync_api import sync_playwright
+from bs4 import BeautifulSoup
 
 url = "https://www.arbeitsagentur.de/jobsuche/jobdetail/10000-1199130034-S"
 
@@ -21,3 +23,4 @@ text = "\n".join(p.get_text(strip=True) for p in paragraphs)
 
 print("=== Extrahierter Text ===")
 print(text)
+print(flask.__version__)
