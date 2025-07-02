@@ -23,9 +23,15 @@ export async function POST(req, res){
                             },
                             partnerschule: {
                                 type: "string",
+                            },
+                            standort_unternehmen:{
+                                type: "string",
+                            },
+                            standort_partnerschule: {
+                                type: "string",
                             }
                         },
-                        required: ["unternehmen", "partnerschule"]
+                        required: ["unternehmen", "partnerschule", "standort_unternehmen", "standort_partnerschule"]
                     }
                 }
             }
