@@ -96,6 +96,33 @@ export default function Home() {
     scrape_job_data(searchTerm);
   }
 
+  const scrape_kernkompetenz_data = async (unternehmen_name) =>{
+    try{
+      const response = await fetch("/api/scraper_kernkompetenz", {
+        method: 'POST',
+        headers:{
+          'Content-type' : 'application/json'
+        },
+        body: JSON.stringify({
+          unternehmen_name: unternehmen_name
+        })
+    });
+
+      const data = await response.json();
+
+      if(data.success){
+        setOutput(data.structured_content);
+      }
+      else{
+        setOutput(`Fehler beim Scraping: ${data.error}`);
+      }
+    }
+    catch(err){
+      console.error(err);
+      setOutput(`Netzwerkfehler: ${err.message}`);
+    }
+  }
+
   //fetch Gemini API
   const generateText = async (scrapedText) => {
 
@@ -122,6 +149,7 @@ export default function Home() {
         const partnerschule_standort = parsedOutput[0].standort_partnerschule;
 
         await check_distance(unternehmen_standort, partnerschule_standort);
+        await scrape_kernkompetenz_data(parsedOutput[0].unternehmen);
       }
       else{
         setOutput(data.error);
