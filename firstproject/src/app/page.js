@@ -58,32 +58,44 @@ export default function Home() {
     },
   ]
 
-  const prompt_generate_table_data = `Finde heraus was das Unternehmen für eine parterschule hat und wo diese ist und wo das Unternehmen ist, aus diesem text: === Extrahierter Text ===
-Du erhältst durch das Duale Studium die Möglichkeit zur idealen Verknüpfung von Theorie und Praxis: Während deiner Praxiseinsätze lernst du deinen eigenen Stammbereich sowie wichtige Schnittstellenbereiche kennen.
-Manche schreiben Codes. Du die Zukunft!
-Als weltweit agierendes Unternehmen betreiben wir eine moderne IT-Landschaft, die jederzeit reibungslos funktionieren muss. Bei der permanenten Automatisierung von Prozessen sowie bei der Fehlerüberprüfung helfen uns selbstentwickelte Skripte und Programmierungen, die sich immer maximal an den Bedürfnissen unserer Kunden innerhalb der Schwarz Gruppe, wie z.B. Lidl und Kaufland, orientieren.
-Duales Studium Angewandte Informatik 2025 m/w/d
-Einsatzbereich:Ausbildung/Duales Studium/Abiturientenprogramm // Ort: Neckarsulm // Arbeitsmodell: Vollzeit
-Dein Studium
-Studiendauer:3 Jahre
-Praxisort:Deine Praxisphasen verbringst du an unseren Standorten im Raum Heilbronn/NeckarsulmStammbereich: Schwarz IT KG (SIT) z.B. in der Anwendungsentwicklung oder in technischen BereichenStudienort:DHBW MosbachStudienabschluss:Bachelor of ScienceStudieninfos:Weitere Informationen findest du unterwww.dhbw-mosbach.de
-Deine Studienschwerpunkte
-In deinen Praxisphasen erhältst du einen tiefen Einblick in verschiedene Themenfelder bzw. arbeitest aktiv in Projekten und Abteilungen mit:
-In deinen Praxisphasen erhältst du einen tiefen Einblick in verschiedene Themenfelder bzw. arbeitest aktiv in Projekten und Abteilungen mit:
-Dein Profil
-Unser Angebot
-Wir freuen uns auf deine Bewerbung!
-SPG GmbH & Co. KG · Eileen Kobald · Referenz-Nr. 42217Stiftsbergstraße 1 · 74172 Neckarsulmwww.jobs.schwarz
-Schwarz Corporate Solutions KG
-In diesem Dokument befinden sich aus Sicherheitsgründen keine Kontaktdaten des Arbeitgebers. Wenn Sie diese sehen möchten, lösen Sie bitte dieSicherheitsfrageund laden Sie das PDF erneut.
-Wir schützen die Kontaktdaten des Arbeitgebers vor unerlaubten Zugriffen. Bitte geben Sie die dargestellten Zeichen in das Textfeld ein, um die Kontaktdaten des Arbeitgebers anzuzeigen.
-Hinweis: Die dargestellten Zeichen enthalten keine Umlaute (ä, ö, ü oder ß), Sonderzeichen oder Leerzeichen.`;
+  const scrape_job_data = async () =>{
 
+    setLoading(true);
+
+    try{
+      const response = await fetch("/api/scraper", {
+        method: 'POST',
+        headers:{
+          'Content-type' : 'application/json'
+        },
+        body: JSON.stringify({
+          url: "https://www.arbeitsagentur.de/jobsuche/jobdetail/10000-1199130034-S"
+        })
+      });
+
+      const data = await response.json();
+
+      if(data.success){
+        await generateText(data.extractedText);
+      }
+      else{
+        setOutput(`Fehler beim Scraping: ${data.error}`);
+      }
+    }
+    catch(err){
+      console.error(err);
+      setOutput(`Netzwerkfehler: ${err.message}`);
+    }
+    finally{
+      setLoading(false);
+    }
+  }
 
   //fetch Gemini API
-  const generateText = async () => {
-    
-    setLoading(true);
+  const generateText = async (scrapedText) => {
+
+    const prompt = `Finde heraus was das Unternehmen für eine parterschule hat und wo diese ist und wo das Unternehmen ist, aus diesem text: ==extrahierterText==  
+    ${scrapedText}`;
 
     try{
       const response = await fetch("/api/generate_table_data", {
@@ -91,7 +103,7 @@ Hinweis: Die dargestellten Zeichen enthalten keine Umlaute (ä, ö, ü oder ß),
         headers:{
           'Content-type' : 'application/json'
         },
-        body: JSON.stringify({body:prompt_generate_table_data})
+        body: JSON.stringify({body:prompt})
       });
 
       const data = await response.json();
@@ -114,9 +126,6 @@ Hinweis: Die dargestellten Zeichen enthalten keine Umlaute (ä, ö, ü oder ß),
     }
     catch(err){
       console.error(err)
-    }
-    finally{
-      setLoading(false);
     }
   }
 
@@ -173,7 +182,7 @@ Hinweis: Die dargestellten Zeichen enthalten keine Umlaute (ä, ö, ü oder ß),
 
   return (
     <div>    
-      {loading ? (<p className="text-blue-500">Loading...</p>):(<p onClick={generateText}>{output}</p>)}
+      {loading ? (<p className="text-blue-500">Loading...</p>):(<p onClick={scrape_job_data}>{output}</p>)}
       <PartnershipTable  data={sampleData}/>
       <p>{distance}</p>
     </div>
