@@ -20,7 +20,7 @@ export default function PartnershipTable({data}) {
       }
       
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-900">
       <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
         <Table>
           <TableHeader>

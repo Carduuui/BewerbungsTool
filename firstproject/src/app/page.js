@@ -2,6 +2,7 @@
 import {useState} from "react";
 import styles from "./globals.css";
 import PartnershipTable from "./partnership-table";
+import SearchForm from "./search-form";
 
 export default function Home() {
   const [output, setOutput] = useState('This is a nextjs project');
@@ -58,7 +59,7 @@ export default function Home() {
     },
   ]
 
-  const scrape_job_data = async () =>{
+  const scrape_job_data = async (url_eingabe) =>{
 
     setLoading(true);
 
@@ -69,7 +70,7 @@ export default function Home() {
           'Content-type' : 'application/json'
         },
         body: JSON.stringify({
-          url: "https://www.arbeitsagentur.de/jobsuche/jobdetail/10000-1199130034-S"
+          url: url_eingabe
         })
       });
 
@@ -89,6 +90,10 @@ export default function Home() {
     finally{
       setLoading(false);
     }
+  }
+
+  const handle_search = (searchTerm) =>{
+    scrape_job_data(searchTerm);
   }
 
   //fetch Gemini API
@@ -181,10 +186,11 @@ export default function Home() {
   }
 
   return (
-    <div>    
-      {loading ? (<p className="text-blue-500">Loading...</p>):(<p onClick={scrape_job_data}>{output}</p>)}
+    <div className="bg-gray-900 min-h-screen p-10">       
+      {loading ? (<p className="text-blue-500">Loading...</p>):(<p>{output}</p>)}
+      <SearchForm onSearch={handle_search}/>
       <PartnershipTable  data={sampleData}/>
       <p>{distance}</p>
-    </div>
+    </div> 
   );
 }

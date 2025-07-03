@@ -14,7 +14,7 @@ export async function POST(request){
         await page.waitForTimeout(3000);
 
         // Alle <p>-Tags extrahieren
-        const paragraphs = await page.$$eval('p', nodes => 
+        const paragraphs = await page.$$eval('p, h1, h2, h3, h4, h5, h6, div, span, li', nodes => 
             nodes.map(n => n.innerText.trim()).filter(text => text.length > 0)
         );
 
