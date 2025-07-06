@@ -9,6 +9,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   const [distance, setDistance] = useState("");
+  const [kernkompetenz_data, setKernkompetenz_data] = useState("");
 
   // Sample data for the table
   const sampleData = [
@@ -111,7 +112,8 @@ export default function Home() {
       const data = await response.json();
 
       if(data.success){
-        setOutput(data.structured_content);
+        setKernkompetenz_data(JSON.stringify(data.data, null, 2));
+        await generate_kernkompetenz(kernkompetenz_data);
       }
       else{
         setOutput(`Fehler beim Scraping: ${data.error}`);
@@ -120,6 +122,37 @@ export default function Home() {
     catch(err){
       console.error(err);
       setOutput(`Netzwerkfehler: ${err.message}`);
+    }
+  }
+
+  const generate_kernkompetenz = async (kernkompetenz_data) =>{
+    const prompt = `Finde heraus was die Kernkompetenz des Unternehmens ist und halte es in 1-2 Stichpunkten fest.
+    Anhand dieses Textes ${kernkompetenz_data}`;
+
+    try{
+      const response = await fetch("/api/generate_kernkompetenz_data", {
+        method: 'POST',
+        headers:{
+          'Content-type' : 'application/json'
+        },
+        body: JSON.stringify({body:prompt})
+      });
+
+      const data = await response.json();
+
+      const parsedOutput = JSON.parse(data.output);
+
+      if(response.ok){
+        setOutput(data.output);
+      }
+      else{
+        setOutput(data.error);
+        const text = await response.text();
+        console.error("Server error:", response.status, text);
+      }
+    }
+    catch(err){
+      console.error(err);
     }
   }
 
@@ -143,13 +176,15 @@ export default function Home() {
       const parsedOutput = JSON.parse(data.output);
 
       if(response.ok){
-        setOutput(data.output);
+       // setOutput(data.output);
 
         const unternehmen_standort = parsedOutput[0].standort_unternehmen;
         const partnerschule_standort = parsedOutput[0].standort_partnerschule;
 
-        await check_distance(unternehmen_standort, partnerschule_standort);
-        await scrape_kernkompetenz_data(parsedOutput[0].unternehmen);
+        await Promise.all([
+          await check_distance(unternehmen_standort, partnerschule_standort),
+          await scrape_kernkompetenz_data(parsedOutput[0].unternehmen)
+        ])
       }
       else{
         setOutput(data.error);
