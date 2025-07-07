@@ -3,16 +3,19 @@ import {useState} from "react";
 import styles from "./globals.css";
 import PartnershipTable from "./partnership-table";
 import SearchForm from "./search-form";
+import CompanyPopup from "./company-popup"
 
 export default function Home() {
   const [output, setOutput] = useState('This is a nextjs project');
   const [loading, setLoading] = useState(false);
 
   const [distance, setDistance] = useState("");
-  const [kernkompetenz_data, setKernkompetenz_data] = useState("");
+
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupData, setPopupData] = useState(null);
 
   // Sample data for the table
-  const sampleData = [
+  const [sampleData, setSampleData] = useState([
     {
       id: 1,
       unternehmen: "Weist EDV GmbH",
@@ -58,7 +61,7 @@ export default function Home() {
       kernkompetenz: "Elektrotechnik, Automatisierung",
       bewerbungsstatus: "Angenommen",
     },
-  ]
+  ]);
 
   const scrape_job_data = async (url_eingabe) =>{
 
@@ -112,8 +115,7 @@ export default function Home() {
       const data = await response.json();
 
       if(data.success){
-        setKernkompetenz_data(JSON.stringify(data.data, null, 2));
-        await generate_kernkompetenz(kernkompetenz_data);
+        await generate_kernkompetenz(JSON.stringify(data.data, null, 2));
       }
       else{
         setOutput(`Fehler beim Scraping: ${data.error}`);
@@ -143,7 +145,11 @@ export default function Home() {
       const parsedOutput = JSON.parse(data.output);
 
       if(response.ok){
-        setOutput(data.output);
+        setPopupData(prevData =>({
+          ...prevData,
+          kernkompetenz: parsedOutput.kernkompetenz || "Nicht angegeben",
+        }));
+        setShowPopup(true);
       }
       else{
         setOutput(data.error);
@@ -181,6 +187,13 @@ export default function Home() {
         const unternehmen_standort = parsedOutput[0].standort_unternehmen;
         const partnerschule_standort = parsedOutput[0].standort_partnerschule;
 
+        setPopupData({
+          unternehmen: parsedOutput[0].unternehmen || "Nicht gefunden",
+          partnerschule: parsedOutput[0].partnerschule || "Nicht gefunden",
+          unternehmensStandort: unternehmen_standort,
+          partnerschuleStandort: partnerschule_standort,
+        })
+
         await Promise.all([
           await check_distance(unternehmen_standort, partnerschule_standort),
           await scrape_kernkompetenz_data(parsedOutput[0].unternehmen)
@@ -212,8 +225,14 @@ export default function Home() {
 
       const result = await response.json();
 
+      const parsedOutput = JSON.parse(result.output);
+
       if(response.ok){
-        setDistance(result.output)
+        setDistance(result.output);
+        setPopupData(prevData =>({
+          ...prevData,
+          distanz: parsedOutput[0].distanz,
+        }))
       }else{
         setOutput(result.error);
         const text = await response.text();
@@ -223,6 +242,22 @@ export default function Home() {
     }
     catch(err){
       console.error(err);
+    }
+  }
+
+  const handleAddToTable = () =>{
+
+  }
+
+  const handleDontAdd = () =>{
+    setShowPopup(false);
+    setPopupData(null);
+  }
+
+  const handleClosePopup = (open) =>{
+    if(!open){
+      setShowPopup(false);
+      setPopupData(null);
     }
   }
 
@@ -254,6 +289,13 @@ export default function Home() {
       <SearchForm onSearch={handle_search}/>
       <PartnershipTable  data={sampleData}/>
       <p>{distance}</p>
+      <CompanyPopup 
+        isOpen={showPopup}
+        onClose={handleClosePopup}
+        data={popupData}
+        onAddToTable={handleAddToTable}
+        onDontAdd={handleDontAdd}
+        />
     </div> 
   );
 }
