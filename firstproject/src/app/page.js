@@ -1,5 +1,5 @@
 'use client'
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import styles from "./globals.css";
 import PartnershipTable from "./partnership-table";
 import SearchForm from "./search-form";
@@ -14,54 +14,12 @@ export default function Home() {
   const [showPopup, setShowPopup] = useState(false);
   const [popupData, setPopupData] = useState(null);
 
+  useEffect(() =>{
+    get_all_data_table();
+  }, []);
+
   // Sample data for the table
-  const [sampleData, setSampleData] = useState([
-    {
-      id: 1,
-      unternehmen: "Weist EDV GmbH",
-      partnerschule: "TH Brandenburg",
-      unternehmensStandort: "Brandenburg an der Havel",
-      partnerschuleStandort: "Brandenburg an der Havel",
-      kernkompetenz: "IT-Dienstleistungen, Software-Entwicklung",
-      bewerbungsstatus: "Angenommen",
-    },
-    {
-      id: 2,
-      unternehmen: "b-plus technologies GmbH",
-      partnerschule: "TH Deggendorf",
-      unternehmensStandort: "Deggendorf",
-      partnerschuleStandort: "Deggendorf",
-      kernkompetenz: "Automatisierungstechnik, Industrie 4.0",
-      bewerbungsstatus: "In Bearbeitung",
-    },
-    {
-      id: 3,
-      unternehmen: "conatec GmbH",
-      partnerschule: "TH Deggendorf",
-      unternehmensStandort: "Deggendorf",
-      partnerschuleStandort: "Deggendorf",
-      kernkompetenz: "Beratung, Digitalisierung",
-      bewerbungsstatus: "Abgelehnt",
-    },
-    {
-      id: 4,
-      unternehmen: "GFH mbH",
-      partnerschule: "TH Deggendorf",
-      unternehmensStandort: "Deggendorf",
-      partnerschuleStandort: "Deggendorf",
-      kernkompetenz: "Finanzdienstleistungen",
-      bewerbungsstatus: "Wartend",
-    },
-    {
-      id: 5,
-      unternehmen: "Siemens AG",
-      partnerschule: "TU München",
-      unternehmensStandort: "München",
-      partnerschuleStandort: "München",
-      kernkompetenz: "Elektrotechnik, Automatisierung",
-      bewerbungsstatus: "Angenommen",
-    },
-  ]);
+  const [sampleData, setSampleData] = useState([]);
 
   const scrape_job_data = async (url_eingabe) =>{
 
@@ -245,11 +203,30 @@ export default function Home() {
     }
   }
 
-  const handleAddToTable = () =>{
+  const handleAddToTable = async () =>{
+    const latestId = await get_latest_id_table();
+    const nextId = latestId == null ? 1 : latestId + 1;
 
+    await post_data_table(nextId);
+    setShowPopup(false);
+
+    const newEntry = {
+      id: nextId,
+      unternehmen: popupData.unternehmen,
+      partnerschule: popupData.partnerschule,
+      unternehmensStandort: popupData.unternehmensStandort,
+      partnerschuleStandort: popupData.partnerschuleStandort,
+      kernkompetenz: popupData.kernkompetenz,
+      bewerbungsstatus: "Option",
+      distanz: popupData.distanz || "Nicht berechnet"
+    };
+
+    setSampleData(prevData =>[...prevData, newEntry]);
+
+    setPopupData(null);
   }
 
-  const handleDontAdd = () =>{
+  const handleDontAdd = async () =>{
     setShowPopup(false);
     setPopupData(null);
   }
@@ -261,8 +238,131 @@ export default function Home() {
     }
   }
 
-  //fetch für DB befüllen
-  const post_data_table = async () =>{
+  const get_latest_id_table = async () =>{
+    try{
+      const response = await fetch("/api/get_latest_id_table", {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Wenn erfolgreich, aber keine Daten (leere Tabelle)
+        if (result.data === null || result.data === undefined) {
+          console.log("Keine Einträge in der Tabelle gefunden. Beginne mit ID 1.");
+          return 0; // Startet bei 1 (0 + 1)
+        }
+        return result.data;
+      } else {
+        // Unterscheide zwischen "keine Daten" und echten Fehlern
+        if (result.error === "No data found with this ID" || 
+            result.error.includes("No data found") || 
+            result.error.includes("empty table")) {
+          console.log("Tabelle ist leer. Beginne mit ID 1.");
+          return 0;
+        } else {
+          // Echter Fehler
+          console.error("Fehler beim Laden der ID:", result.error);
+          setOutput(`Fehler beim Laden der Daten: ${result.error}`);
+          return null;
+        }
+      }
+    } catch (err) {
+      console.error("Network error:", err);
+      setOutput(`Netzwerkfehler: ${err.message}`);
+      return null;
+    } 
+  }
+
+  const post_data_table = async (latest_id) =>{
+    try{
+      const response = await fetch("/api/post_data_table", {
+        method: 'POST',
+        headers:{
+          'Content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: parseInt(latest_id),
+          unternehmen: popupData.unternehmen,
+          partnerschule: popupData.partnerschule,
+          unternehmen_standort: popupData.unternehmensStandort,
+          partnerschule_standort: popupData.partnerschuleStandort,
+          kernkompetenz: popupData.kernkompetenz
+        })
+      })
+
+      const result = await response.json();
+      console.log(result);
+    }
+    catch(err){
+      console.error(err);
+    }
+  }
+
+  const get_data_table = async (id) =>{
+    console.log(id);
+    try{
+      const response = await fetch("/api/get_data_table?id=" + id, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+    if(result.success){
+      console.log("Daten erfolgreich geladen:", result.data);
+      return result.data;
+    } 
+    else {
+      // Spezifische Behandlung für "keine Daten gefunden"
+      if (result.error === "No data found with this ID") {
+        console.log(`Keine Daten für ID ${id} gefunden.`);
+        return null; // Kein Fehler, nur keine Daten
+      } else {
+        console.error("Fehler beim Laden der Daten:", result.error);
+        setOutput(`Fehler beim Laden der Daten: ${result.error}`);
+        return null;
+      }
+    }
+    } catch (err) {
+      console.error("Network error:", err);
+      setOutput(`Netzwerkfehler: ${err.message}`);
+      return null;
+    } 
+  }
+
+  const get_all_data_table = async () =>{
+    try{
+      const response = await fetch("/api/get_all_data_table", {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      if(result.success){
+        setSampleData(result.data)
+      } 
+      else {
+          console.error("Fehler beim Laden der Daten:", result.error);
+          setOutput(`Fehler beim Laden der Daten: ${result.error}`);
+      }
+    }
+    catch (err) {
+      console.error("Netzwerkfehler beim Laden aller Daten:", err);
+      setOutput(`Netzwerkfehler: ${err.message}`);
+    }
+  }
+
+  //fetch für DB befüllen (test)
+  const post_test_data_table = async () =>{
     try{
       const response = await fetch("/api/post_table", {
         method: 'POST',

@@ -10,9 +10,9 @@ export default function PartnershipTable({data}) {
             return <Badge className="bg-green-600 hover:bg-green-700">{status}</Badge>
           case "Abgelehnt":
             return <Badge className="bg-red-600 hover:bg-red-700">{status}</Badge>
-          case "In Bearbeitung":
+          case "Abgeschickt":
             return <Badge className="bg-yellow-600 hover:bg-yellow-700">{status}</Badge>
-          case "Wartend":
+          case "Option":
             return <Badge className="bg-gray-600 hover:bg-gray-700">{status}</Badge>
           default:
             return <Badge className="bg-gray-600 hover:bg-gray-700">{status}</Badge>
@@ -36,7 +36,7 @@ export default function PartnershipTable({data}) {
           <TableBody>
             {data.map((row) => (
               <TableRow
-                key={row.id}
+                key={row.customId}
                 className="bg-gray-800 hover:bg-gray-750 border-b border-gray-700 transition-colors"
               >
                 <TableCell className="text-white font-medium">{row.unternehmen}</TableCell>
