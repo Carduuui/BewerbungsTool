@@ -3,7 +3,8 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 
-export default function PartnershipTable({data}) {
+export default function PartnershipTable({data, onStatusChange}) {
+    const statusOptions = ["Option", "Abgeschickt", "Angenommen", "Abgelehnt"];
       const getStatusBadge = (status) => {
         switch (status) {
           case "Angenommen":
@@ -18,6 +19,18 @@ export default function PartnershipTable({data}) {
             return <Badge className="bg-gray-600 hover:bg-gray-700">{status}</Badge>
         }
       }
+
+        // Funktion zum Wechseln des Status
+  const handleStatusClick = (rowId, currentStatus) => {
+    const currentIndex = statusOptions.indexOf(currentStatus);
+    const nextIndex = (currentIndex + 1) % statusOptions.length; // Kreislauf durch die Optionen
+    const newStatus = statusOptions[nextIndex];
+    
+    // Callback an Parent-Komponente weitergeben
+    if (onStatusChange) {
+      onStatusChange(rowId, newStatus);
+    }
+  }
       
   return (
     <div className="min-h-screen bg-gray-900">
@@ -36,7 +49,7 @@ export default function PartnershipTable({data}) {
           <TableBody>
             {data.map((row) => (
               <TableRow
-                key={row.customId}
+                key={row.customId || row.id}
                 className="bg-gray-800 hover:bg-gray-750 border-b border-gray-700 transition-colors"
               >
                 <TableCell className="text-white font-medium">{row.unternehmen}</TableCell>
@@ -44,7 +57,7 @@ export default function PartnershipTable({data}) {
                 <TableCell className="text-gray-300">{row.unternehmensStandort}</TableCell>
                 <TableCell className="text-gray-300">{row.partnerschuleStandort}</TableCell>
                 <TableCell className="text-gray-300">{row.kernkompetenz}</TableCell>
-                <TableCell>{getStatusBadge(row.bewerbungsstatus)}</TableCell>
+                <TableCell className="cursor-pointer" onClick={() =>handleStatusClick(row.customId || row.id, row.bewerbungsstatus)}>{getStatusBadge(row.bewerbungsstatus)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

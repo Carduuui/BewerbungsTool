@@ -383,11 +383,26 @@ export default function Home() {
     }
   }
 
+  const handle_status_change = async(rowId, newStatus) =>{
+    try{
+      setSampleData(prevData => prevData.map(row =>
+        (row.customId || row.id) === rowId 
+        ? {...row, bewerbungsstatus: newStatus}
+        : row
+      )
+      );
+    }
+    catch(err){
+      console.error("Fehler beim Aktualisieren des Status: ", err);
+      setOutput(`Fehler beim Aktualisieren des Status: ${err.message}`);
+    }
+  }
+
   return (
     <div className="bg-gray-900 min-h-screen p-10">       
       {loading ? (<p className="text-blue-500">Loading...</p>):(<p>{output}</p>)}
       <SearchForm onSearch={handle_search}/>
-      <PartnershipTable  data={sampleData}/>
+      <PartnershipTable  data={sampleData} onStatusChange={handle_status_change}/>
       <p>{distance}</p>
       <CompanyPopup 
         isOpen={showPopup}
