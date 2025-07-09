@@ -58,6 +58,16 @@ export default function PartnershipTable({data, onStatusChange}) {
                 <TableCell className="text-gray-300">{row.partnerschuleStandort}</TableCell>
                 <TableCell className="text-gray-300">{row.kernkompetenz}</TableCell>
                 <TableCell className="cursor-pointer" onClick={() =>handleStatusClick(row.customId || row.id, row.bewerbungsstatus)}>{getStatusBadge(row.bewerbungsstatus)}</TableCell>
+                <TableCell>
+                  <Button
+                    onClick={() => onDelete && onDelete(row.id)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
