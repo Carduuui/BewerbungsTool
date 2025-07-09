@@ -8,7 +8,7 @@ export async function GET(req){
         const result = await query.find();
 
         const data = result.map(item =>({
-            customId: item.id,
+            customId: item.get("customId"),
             unternehmen: item.get("unternehmen"),
             partnerschule: item.get("partnerschule"),
             unternehmensStandort: item.get("unternehmensStandort"),

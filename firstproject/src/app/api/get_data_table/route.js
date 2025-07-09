@@ -32,7 +32,7 @@ export async function GET(req){
         }
 
         const data = {
-            customId: result.id,
+            customId: result.get("customId"),
             unternehmen: result.get("unternehmen"),
             partnerschule: result.get("partnerschule"),
             unternehmensStandort: result.get("unternehmensStandort"),

@@ -348,6 +348,7 @@ export default function Home() {
       const result = await response.json();
 
       if(result.success){
+        console.log(result.data);
         setSampleData(result.data)
       } 
       else {
@@ -383,14 +384,52 @@ export default function Home() {
     }
   }
 
+  const post_bewerbungsstatus = async (id, newStatus) =>{
+    console.log("Sending to API - ID: ", id, "Status:", newStatus);
+    try{
+      const response = await fetch("/api/post_bewerbungsstatus_table", {
+        method: 'POST',
+        headers:{
+          'Content-Type' : 'application/json'
+        },
+        body: JSON.stringify({
+          id: id,
+          bewerbungsstatus: newStatus
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log("Bewerbungsstatus erfolgreich aktualisiert");
+        return true;
+    } else {
+        console.error("Fehler beim Aktualisieren des Status:", result.error);
+        setOutput(`Fehler beim Aktualisieren des Status: ${result.error}`);
+        return false;
+    }
+
+    }
+    catch(err){
+      console.error("Netzwerkfehler beim Aktualisieren des Status:", err);
+      setOutput(`Netzwerkfehler: ${err.message}`);
+      return false;
+    }
+  }
+
   const handle_status_change = async(rowId, newStatus) =>{
     try{
-      setSampleData(prevData => prevData.map(row =>
-        (row.customId || row.id) === rowId 
-        ? {...row, bewerbungsstatus: newStatus}
-        : row
-      )
-      );
+      // First update the database
+      const success = await post_bewerbungsstatus(rowId, newStatus);
+
+      if(success){
+        setSampleData(prevData => prevData.map(row =>
+          (row.customId || row.id) === rowId 
+          ? {...row, bewerbungsstatus: newStatus}
+          : row
+        )
+        );
+      }
     }
     catch(err){
       console.error("Fehler beim Aktualisieren des Status: ", err);
