@@ -1,4 +1,4 @@
-import Parse from "../../../../parseService";
+import Parse from "@/parseService";
 
 //befüllung DB
 export async function GET(req){

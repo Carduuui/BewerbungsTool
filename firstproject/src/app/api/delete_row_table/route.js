@@ -1,4 +1,4 @@
-import Parse from "../../../../parseService";
+import Parse from "@/parseService";
 
 // Delete record from database
 export async function DELETE(req, res) {

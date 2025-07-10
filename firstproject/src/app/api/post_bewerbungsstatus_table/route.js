@@ -1,5 +1,5 @@
 import { requestToBodyStream } from "next/dist/server/body-streams";
-import Parse from "../../../../parseService";
+import Parse from "@/parseService";
 
 //befüllung DB
 export async function POST(req, res){

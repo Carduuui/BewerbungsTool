@@ -1,4 +1,4 @@
-import Parse from "../../../../parseService";
+import Parse from "@/parseService";
 
 //testen Verbindung zu back4app
 export async function GET(request) {

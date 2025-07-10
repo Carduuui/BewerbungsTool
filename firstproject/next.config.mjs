@@ -1,4 +1,9 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
-
-export default nextConfig;
+const nextConfig = {
+    experimental: {
+      // Ermöglicht absolute Imports
+      esmExternals: 'loose'
+    }
+  };
+  
+  export default nextConfig;
