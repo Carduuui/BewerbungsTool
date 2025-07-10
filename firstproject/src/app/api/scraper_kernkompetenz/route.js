@@ -1,4 +1,4 @@
-const { chromium } = require('playwright');
+import puppeteer from 'puppeteer';
 
 export async function POST(request){
     let company_name = 'leer';
@@ -8,7 +8,7 @@ export async function POST(request){
         const {unternehmen_name} = await request.json();
         company_name = unternehmen_name || 'BMW';
     
-        browser = await chromium.launch({ 
+        browser = await puppeteer.launch({ 
             headless: true,
             args: [
                 '--no-sandbox', 
@@ -16,24 +16,27 @@ export async function POST(request){
                 '--disable-dev-shm-usage',
                 '--disable-blink-features=AutomationControlled',
                 '--disable-web-security',
-                '--disable-features=VizDisplayCompositor'
+                '--disable-features=VizDisplayCompositor',
+                '--disable-accelerated-2d-canvas',
+                '--disable-gpu',
+                '--window-size=1920x1080'
             ]
         });
         
-        const context = await browser.newContext({
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            extraHTTPHeaders: {
-                'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Cache-Control': 'no-cache'
-            },
-            viewport: { width: 1920, height: 1080 }
+        const page = await browser.newPage();
+
+        // User Agent und Headers setzen
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        await page.setExtraHTTPHeaders({
+            'Accept-Language': 'de-DE,de;q=0.9,en;q=0.8',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Cache-Control': 'no-cache'
         });
         
-        const page = await context.newPage();
+        await page.setViewport({ width: 1920, height: 1080 });
 
-        // Add stealth techniques
-        await page.addInitScript(() => {
+        // Stealth-Techniken hinzufügen
+        await page.evaluateOnNewDocument(() => {
             Object.defineProperty(navigator, 'webdriver', {
                 get: () => undefined,
             });
@@ -41,7 +44,7 @@ export async function POST(request){
 
         console.log(`Starting scrape for: ${company_name}`);
 
-        // Try multiple search strategies
+        // Mehrere Suchstrategien versuchen
         const searchStrategies = [
             `${company_name} offizielle Webseite`,
             `${company_name} official website`,
@@ -64,10 +67,10 @@ export async function POST(request){
                     timeout: 30000
                 });
                 
-                // Random delay to appear more human-like
+                // Zufällige Verzögerung für menschlicheres Verhalten
                 await page.waitForTimeout(Math.random() * 2000 + 1000);
 
-                // Check if Google blocked us
+                // Prüfen ob Google blockiert hat
                 const pageTitle = await page.title();
                 const isBlocked = pageTitle.includes('unusual traffic') || 
                                 pageTitle.includes('Captcha') || 
@@ -78,7 +81,7 @@ export async function POST(request){
                     continue;
                 }
 
-                // Enhanced selectors for Google search results
+                // Erweiterte Selektoren für Google-Suchergebnisse
                 const searchSelectors = [
                     'div.g:first-child a[href^="http"]:not([href*="google.com"]):not([href*="youtube.com"])',
                     'div.tF2Cxc:first-child a[href^="http"]:not([href*="google.com"]):not([href*="youtube.com"])',
@@ -88,14 +91,14 @@ export async function POST(request){
                     'a[href^="http"]:not([href*="google.com"]):not([href*="youtube.com"]):not([href*="maps.google"]):not([href*="translate.google"])'
                 ];
 
-                // Try each selector
+                // Jeden Selektor versuchen
                 for (const selector of searchSelectors) {
                     try {
                         await page.waitForSelector(selector, { timeout: 3000 });
                         const linkHandle = await page.$(selector);
                         
                         if (linkHandle) {
-                            firstResult = await linkHandle.evaluate(el => el.href);
+                            firstResult = await page.evaluate(el => el.href, linkHandle);
                             
                             if (firstResult && 
                                 firstResult.startsWith('http') && 
@@ -117,7 +120,7 @@ export async function POST(request){
 
                 if (firstResult) break;
 
-                // Alternative approach: get all organic results and filter
+                // Alternative Herangehensweise: alle organischen Ergebnisse holen und filtern
                 try {
                     const allLinks = await page.evaluate(() => {
                         const links = Array.from(document.querySelectorAll('a[href]'));
@@ -155,7 +158,7 @@ export async function POST(request){
         }
 
         if (!firstResult) {
-            // Final fallback: try DuckDuckGo
+            // Finaler Fallback: DuckDuckGo versuchen
             try {
                 console.log('Trying DuckDuckGo as fallback...');
                 const duckUrl = `https://duckduckgo.com/?q=${encodeURIComponent(company_name + ' official website')}&t=h_&ia=web`;
@@ -189,7 +192,7 @@ export async function POST(request){
         }
 
         if (!firstResult) {
-            // Enhanced debugging
+            // Erweiterte Fehlerdiagnose
             const debugInfo = await page.evaluate(() => ({
                 title: document.title,
                 url: window.location.href,
@@ -212,7 +215,7 @@ export async function POST(request){
         console.log(`Successfully found website: ${firstResult}`);
         console.log(`Using strategy: ${successfulStrategy}`);
 
-        // Navigate to company website with enhanced retry logic
+        // Zur Firmenwebsite navigieren mit erweiterter Retry-Logik
         let retryCount = 0;
         const maxRetries = 3;
         
@@ -223,10 +226,10 @@ export async function POST(request){
                     timeout: 30000
                 });
                 
-                // Wait for page to fully load
+                // Warten bis die Seite vollständig geladen ist
                 await page.waitForTimeout(3000);
                 
-                // Check if page loaded successfully
+                // Prüfen ob die Seite erfolgreich geladen wurde
                 const pageTitle = await page.title();
                 if (pageTitle && pageTitle !== 'Error' && pageTitle !== '404') {
                     break;
@@ -244,7 +247,7 @@ export async function POST(request){
             }
         }
 
-        // Enhanced content extraction
+        // Erweiterte Inhaltsextraktion
         const extracted_data = await page.evaluate(() => {
             try {
                 const selectors = {
@@ -272,15 +275,15 @@ export async function POST(request){
 
                 const data = {};
 
-                // Basic page info
+                // Grundlegende Seiteninformationen
                 data.title = document.title || 'Kein Titel';
                 data.url = window.location.href;
                 
-                // Meta description
+                // Meta-Beschreibung
                 const metaDesc = document.querySelector(selectors.metaDescription);
                 data.metaDescription = metaDesc ? metaDesc.getAttribute('content') : '';
 
-                // Enhanced heading extraction
+                // Erweiterte Überschriftenextraktion
                 data.headings = Array.from(document.querySelectorAll(selectors.headings))
                     .map(el => ({
                         level: el.tagName.toLowerCase(),
@@ -288,21 +291,21 @@ export async function POST(request){
                         position: Array.from(document.querySelectorAll(selectors.headings)).indexOf(el)
                     }))
                     .filter(h => h.text.length > 0 && h.text.length < 200)
-                    .slice(0, 20); // Limit to first 20 headings
+                    .slice(0, 20); // Auf erste 20 Überschriften begrenzen
 
-                // Enhanced paragraph extraction
+                // Erweiterte Absatzextraktion
                 data.paragraphs = Array.from(document.querySelectorAll(selectors.paragraphs))
                     .map(el => (el.innerText || el.textContent || '').trim())
                     .filter(text => text.length > 20 && text.length < 1000)
-                    .slice(0, 15); // Limit to first 15 paragraphs
+                    .slice(0, 15); // Auf erste 15 Absätze begrenzen
 
-                // Navigation extraction
+                // Navigationsextraktion
                 data.navigation = Array.from(document.querySelectorAll(selectors.navigation))
                     .map(el => (el.innerText || el.textContent || '').trim())
                     .filter(text => text.length > 0 && text.length < 100)
                     .slice(0, 20);
 
-                // Special sections with better error handling
+                // Spezielle Bereiche mit besserer Fehlerbehandlung
                 try {
                     data.aboutSections = Array.from(document.querySelectorAll(selectors.aboutSections))
                         .map(el => (el.innerText || el.textContent || '').trim())
@@ -337,14 +340,14 @@ export async function POST(request){
             }
         });
 
-        // Prepare structured content
+        // Strukturierte Inhalte vorbereiten
         const structured_content = {
             company_name: company_name,
             website_url: extracted_data.url,
             page_title: extracted_data.title,
             meta_description: extracted_data.metaDescription,
             
-            // Combined text for analysis
+            // Kombinierten Text für Analyse
             full_text: [
                 extracted_data.metaDescription,
                 ...extracted_data.headings.map(h => h.text),
@@ -353,7 +356,7 @@ export async function POST(request){
                 ...extracted_data.servicesSections
             ].filter(text => text && text.length > 0).join('\n\n'),
             
-            // Structured data for detailed analysis
+            // Strukturierte Daten für detaillierte Analyse
             structured_data: {
                 headings: extracted_data.headings,
                 navigation_items: extracted_data.navigation,
