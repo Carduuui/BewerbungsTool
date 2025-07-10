@@ -1,16 +1,33 @@
-const { chromium } = require('playwright');
+import { chromium } from 'playwright'; // ES6 Import statt require
 
 export async function POST(request){
+    let browser;
     try{
         const {url} = await request.json();
 
         // Default URL falls keine URL mitgegeben wird
         const targetUrl = url || 'https://www.arbeitsagentur.de/jobsuche/jobdetail/10000-1199130034-S';
     
-        const browser = await chromium.launch({ headless: true });
+        // Browser mit Cloud-optimierten Einstellungen
+        browser = await chromium.launch({ 
+            headless: true,
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--disable-gpu',
+                '--window-size=1920x1080'
+            ]
+        });
+        
         const page = await browser.newPage();
 
-        await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });
+        await page.goto(targetUrl, { 
+            waitUntil: 'domcontentloaded',
+            timeout: 30000 // 30 Sekunden Timeout
+        });
+        
         await page.waitForTimeout(3000);
 
         // Alle <p>-Tags extrahieren
@@ -20,8 +37,6 @@ export async function POST(request){
 
         // Vollständigen Text als String zusammenfügen
         const extractedText = paragraphs.join('\n');
-
-        await browser.close();
 
         return Response.json({
             success: true,
@@ -34,7 +49,13 @@ export async function POST(request){
     
         return Response.json({
           success: false,
-          error: error.message
+          error: err.message // FIX: err.message statt error.message
         }, { status: 500 });
+    }
+    finally {
+        // Browser immer schließen, auch bei Fehlern
+        if (browser) {
+            await browser.close();
+        }
     }
 }
