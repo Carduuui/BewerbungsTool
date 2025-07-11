@@ -127,8 +127,8 @@ export default function Home() {
       const parsedOutput = JSON.parse(data.output)
 
       if (response.ok) {
-        const unternehmen_standort = parsedOutput[0].standort_unternehmen
-        const partnerschule_standort = parsedOutput[0].standort_partnerschule
+        const unternehmen_standort = parsedOutput[0].unternehmensStandort
+        const partnerschule_standort = parsedOutput[0].partnerschuleStandort
 
         setPopupData({
           unternehmen: parsedOutput[0].unternehmen || "Nicht gefunden",
