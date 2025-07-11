@@ -152,33 +152,41 @@ export default function Home() {
   }
 
   const check_distance = async (unternehmen_standort, partnerschule_standort) => {
-    const prompt = `wie weit ist ${unternehmen_standort} von ${partnerschule_standort} entfernt mit Auto in Kilometern?`
-
     try {
       const response = await fetch("/api/check_distance", {
-        method: "POST",
-        headers: {
-          "Content-type": "application/json",
-        },
-        body: JSON.stringify({ body: prompt }),
-      })
+          method: "POST",
+          headers: {
+              "Content-type": "application/json",
+          },
+          body: JSON.stringify({ 
+              origin: unternehmen_standort,
+              destination: partnerschule_standort
+          }),
+      });
 
-      const result = await response.json()
-      const parsedOutput = JSON.parse(result.output)
+      const result = await response.json();
 
-      if (response.ok) {
-        setDistance(result.output)
-        setPopupData((prevData) => ({
-          ...prevData,
-          distanz: parsedOutput[0].distanz,
-        }))
+      if (response.ok && result.success) {
+          setDistance(result.data.distanz);
+          setPopupData((prevData) => ({
+              ...prevData,
+              distanz: result.data.distanz,
+              fahrtzeit: result.data.fahrtzeit // Optional: Fahrtzeit hinzufügen
+          }));
       } else {
-        const text = await response.text()
-        console.error("Server error:", response.status, text)
+          console.error("Fehler bei der Entfernungsberechnung:", result.error);
+          setPopupData((prevData) => ({
+              ...prevData,
+              distanz: "Nicht berechnet"
+          }));
       }
-    } catch (err) {
-      console.error(err)
-    }
+  } catch (err) {
+      console.error("Netzwerkfehler bei der Entfernungsberechnung:", err);
+      setPopupData((prevData) => ({
+          ...prevData,
+          distanz: "Fehler bei Berechnung"
+      }));
+  }
   }
 
   const handleAddToTable = async () => {
