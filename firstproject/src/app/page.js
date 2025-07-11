@@ -124,70 +124,30 @@ export default function Home() {
       })
 
       const data = await response.json()
-      
+      const parsedOutput = JSON.parse(data.output)
+
       if (response.ok) {
-        // Add validation before parsing
-        if (!data.output) {
-          console.error("No output received from API")
-          return
-        }
-
-        let parsedOutput
-        try {
-          parsedOutput = JSON.parse(data.output)
-        } catch (parseError) {
-          console.error("Failed to parse API output:", parseError)
-          console.error("Raw output:", data.output)
-          return
-        }
-
-        // Validate the structure of parsedOutput
-        if (!Array.isArray(parsedOutput) || parsedOutput.length === 0) {
-          console.error("Invalid response structure: parsedOutput is not an array or is empty")
-          console.error("Parsed output:", parsedOutput)
-          return
-        }
-
-        const firstResult = parsedOutput[0]
-        
-        // Validate that the first result has the required properties
-        if (!firstResult || typeof firstResult !== 'object') {
-          console.error("First result is not a valid object")
-          console.error("First result:", firstResult)
-          return
-        }
-
-        // Use optional chaining and provide fallback values
-        const unternehmen_standort = firstResult.unternehmensStandort || "Nicht angegeben"
-        const partnerschule_standort = firstResult.partnerschuleStandort || "Nicht angegeben"
+        const unternehmen_standort = parsedOutput[0].standort_unternehmen
+        const partnerschule_standort = parsedOutput[0].standort_partnerschule
 
         setPopupData({
-          unternehmen: firstResult.unternehmen || "Nicht gefunden",
-          partnerschule: firstResult.partnerschule || "Nicht gefunden",
+          unternehmen: parsedOutput[0].unternehmen || "Nicht gefunden",
+          partnerschule: parsedOutput[0].partnerschule || "Nicht gefunden",
           unternehmensStandort: unternehmen_standort,
           partnerschuleStandort: partnerschule_standort,
         })
 
-        // Only proceed with distance calculation and scraping if we have valid locations
-        if (unternehmen_standort !== "Nicht angegeben" && partnerschule_standort !== "Nicht angegeben") {
-          setLoadingMessage("Entfernung wird berechnet...")
-          await Promise.all([
-            check_distance(unternehmen_standort, partnerschule_standort),
-            scrape_kernkompetenz_data(firstResult.unternehmen || ""),
-          ])
-        } else {
-          // If locations are missing, still try to get kernkompetenz
-          console.log("Locations missing, skipping distance calculation")
-          if (firstResult.unternehmen) {
-            await scrape_kernkompetenz_data(firstResult.unternehmen)
-          }
-        }
+        setLoadingMessage("Entfernung wird berechnet...")
+        await Promise.all([
+          await check_distance(unternehmen_standort, partnerschule_standort),
+          await scrape_kernkompetenz_data(parsedOutput[0].unternehmen),
+        ])
       } else {
         const text = await response.text()
         console.error("Server error:", response.status, text)
       }
     } catch (err) {
-      console.error("Error in generateText:", err)
+      console.error(err)
     }
   }
 
