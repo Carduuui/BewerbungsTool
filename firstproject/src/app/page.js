@@ -438,6 +438,7 @@ export default function Home() {
         onAddToTable={handleAddToTable}
         onDontAdd={handleDontAdd}
       />
+      <p className="text-white">Extra: https://www.arbeitsagentur.de/jobsuche/jobdetail/10000-1202680625-S für SAP</p>
     </div>
   )
 }
