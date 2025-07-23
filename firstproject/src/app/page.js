@@ -171,7 +171,10 @@ export default function Home() {
           setPopupData((prevData) => ({
               ...prevData,
               distanz: result.data.distanz,
-              fahrtzeit: result.data.fahrtzeit // Optional: Fahrtzeit hinzufügen
+              fahrtzeit: result.data.fahrtzeit, // Optional: Fahrtzeit hinzufügen
+
+              originCoords: result.data.originCoords,
+              destinationCoords: result.data.destinationCoords
           }));
       } else {
           console.error("Fehler bei der Entfernungsberechnung:", result.error);
