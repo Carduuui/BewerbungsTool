@@ -58,7 +58,7 @@ export default function PartnershipTable({ data, onStatusChange, onDelete }) {
                   className="bg-gray-800 hover:bg-gray-750 border-b border-gray-700 transition-colors"
                 >
                   <TableCell className="text-white font-medium max-w-[150px] break-words whitespace-normal py-4">
-                    {row.unternehmen}
+                    <a href={row.link}>{row.unternehmen}</a>
                   </TableCell>
                   <TableCell className="text-gray-300 max-w-[150px] break-words whitespace-normal py-4">
                     {row.partnerschule}

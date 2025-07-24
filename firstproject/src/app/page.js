@@ -12,6 +12,7 @@ export default function Home() {
   const [distance, setDistance] = useState("")
   const [showPopup, setShowPopup] = useState(false)
   const [popupData, setPopupData] = useState(null)
+  const [searchTermLink, setSearchTermLink] = useState(null)
 
   useEffect(() => {
     get_all_data_table()
@@ -50,6 +51,7 @@ export default function Home() {
   }
 
   const handle_search = (searchTerm) => {
+    setSearchTermLink(searchTerm);
     scrape_job_data(searchTerm)
   }
 
@@ -208,6 +210,7 @@ export default function Home() {
       kernkompetenz: popupData.kernkompetenz,
       bewerbungsstatus: "Option",
       distanz: popupData.distanz || "Nicht berechnet",
+      link: searchTermLink,
     }
 
     setSampleData((prevData) => [...prevData, newEntry])
@@ -278,6 +281,7 @@ export default function Home() {
           unternehmen_standort: popupData.unternehmensStandort,
           partnerschule_standort: popupData.partnerschuleStandort,
           kernkompetenz: popupData.kernkompetenz,
+          link: searchTermLink,
         }),
       })
 
@@ -329,7 +333,7 @@ export default function Home() {
 
       const result = await response.json()
       if (result.success) {
-        console.log(result.data)
+        console.log("all data table" + result.data[0])
         setSampleData(result.data)
       } else {
         console.error("Fehler beim Laden der Daten:", result.error)

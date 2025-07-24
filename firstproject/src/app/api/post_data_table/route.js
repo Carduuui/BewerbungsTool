@@ -14,6 +14,7 @@ export async function POST(req, res){
         data.set("unternehmensStandort", body.unternehmen_standort);
         data.set("partnerschuleStandort", body.partnerschule_standort);
         data.set("kernkompetenz", body.kernkompetenz);
+        data.set("link", body.link);
 
         await data.save();
 

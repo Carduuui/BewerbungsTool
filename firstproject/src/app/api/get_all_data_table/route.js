@@ -15,6 +15,7 @@ export async function GET(req){
             partnerschuleStandort: item.get("partnerschuleStandort"),
             kernkompetenz: item.get("kernkompetenz"),
             bewerbungsstatus: item.get("bewerbungsstatus") || "Option",
+            link: item.get("link"),
         }));
 
         return new Response(JSON.stringify({
