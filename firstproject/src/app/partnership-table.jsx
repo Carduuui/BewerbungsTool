@@ -1,11 +1,26 @@
 "use client"
 
+import { useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Trash2 } from "lucide-react"
 
 export default function PartnershipTable({ data, onStatusChange, onDelete }) {
+  const [deleteDialog, setDeleteDialog] = useState({
+    isOpen: false,
+    itemId: null,
+    itemName: "",
+  })
+
   const statusOptions = ["Option", "Abgeschickt", "Angenommen", "Abgelehnt"]
 
   const getStatusBadge = (status) => {
@@ -23,16 +38,41 @@ export default function PartnershipTable({ data, onStatusChange, onDelete }) {
     }
   }
 
-  // Funktion zum Wechseln des Status
   const handleStatusClick = (rowId, currentStatus) => {
     const currentIndex = statusOptions.indexOf(currentStatus)
-    const nextIndex = (currentIndex + 1) % statusOptions.length // Kreislauf durch die Optionen
+    const nextIndex = (currentIndex + 1) % statusOptions.length
     const newStatus = statusOptions[nextIndex]
 
-    // Callback an Parent-Komponente weitergeben
     if (onStatusChange) {
       onStatusChange(rowId, newStatus)
     }
+  }
+
+  const handleDeleteClick = (rowId, companyName) => {
+    setDeleteDialog({
+      isOpen: true,
+      itemId: rowId,
+      itemName: companyName,
+    })
+  }
+
+  const handleConfirmDelete = () => {
+    if (onDelete && deleteDialog.itemId) {
+      onDelete(deleteDialog.itemId)
+    }
+    setDeleteDialog({
+      isOpen: false,
+      itemId: null,
+      itemName: "",
+    })
+  }
+
+  const handleCancelDelete = () => {
+    setDeleteDialog({
+      isOpen: false,
+      itemId: null,
+      itemName: "",
+    })
   }
 
   return (
@@ -80,7 +120,7 @@ export default function PartnershipTable({ data, onStatusChange, onDelete }) {
                   </TableCell>
                   <TableCell className="py-4">
                     <Button
-                      onClick={() => onDelete(row.customId || row.id)}
+                      onClick={() => handleDeleteClick(row.customId || row.id, row.unternehmen)}
                       variant="ghost"
                       size="sm"
                       className="text-red-400 hover:text-red-300 hover:bg-red-900/20 p-2"
@@ -94,6 +134,31 @@ export default function PartnershipTable({ data, onStatusChange, onDelete }) {
           </Table>
         </div>
       </div>
+
+      {/* Bestätigungsdialog für das Löschen */}
+      <Dialog open={deleteDialog.isOpen} onOpenChange={setDeleteDialog}>
+        <DialogContent className="bg-gray-800 border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">Eintrag löschen</DialogTitle>
+            <DialogDescription className="text-gray-300">
+              Sind Sie sicher, dass Sie den Eintrag für "{deleteDialog.itemName}" löschen möchten? Diese Aktion kann
+              nicht rückgängig gemacht werden.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelDelete}
+              className="border-gray-600 text-gray-300 hover:bg-gray-700 bg-transparent"
+            >
+              Abbrechen
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700">
+              Löschen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
