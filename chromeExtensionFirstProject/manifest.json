@@ -1,0 +1,23 @@
+{
+    "manifest_version": 3,
+    "name": "chrome Extension firstProject",
+    "version": "1.0",
+    "description": "Button in Toolbar, um firstProject zu starten",
+
+    "action":{
+        "default_title": "klick mich"
+    },
+
+    "background":{
+        "service_worker": "background.js"
+    },
+
+    "permissions": [
+        "activeTab",
+        "notifications"
+    ],
+
+    "host_permissions":[
+        "http://localhost:3000/*"
+    ]
+}

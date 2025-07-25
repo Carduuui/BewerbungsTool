@@ -13,9 +13,87 @@ export default function Home() {
   const [showPopup, setShowPopup] = useState(false)
   const [popupData, setPopupData] = useState(null)
   const [searchTermLink, setSearchTermLink] = useState(null)
+  const [connectionStatus, setConnectionStatus] = useState(null);
 
   useEffect(() => {
-    get_all_data_table()
+    get_all_data_table();
+
+    let eventSource = null;
+    let reconnectTimer = null;
+
+    const connectToSSE = () => {
+      console.log('Attempting to connect to SSE...');
+      
+      try {
+        // Close existing connection if any
+        if (eventSource) {
+          eventSource.close();
+          eventSource = null;
+        }
+
+        eventSource = new EventSource('/api/extension-stream');
+
+        if (!eventSource) {
+          console.error('Failed to create EventSource');
+          setConnectionStatus('Fehler beim Erstellen der Verbindung');
+          return;
+        }
+
+        eventSource.onopen = () => {
+          console.log('SSE connection opened');
+          setConnectionStatus('Verbunden - Warte auf URLs...');
+        };
+
+        eventSource.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            console.log('SSE message received:', data);
+
+            if (data.type === 'new-url') {
+              console.log('Automatisch neue URL erhalten:', data.url);
+              setConnectionStatus('URL empfangen - Verarbeitung läuft...');
+              handle_search(data.url);
+            } else if (data.type === 'connected') {
+              console.log('SSE connected with client ID:', data.clientId);
+              setConnectionStatus('Verbunden - Warte auf URLs...');
+            }
+          } catch (err) {
+            console.error('Error parsing SSE data:', err);
+          }
+        };
+
+        eventSource.onerror = (error) => {
+          console.error('SSE error:', error);
+          console.error('EventSource readyState:', eventSource?.readyState);
+          setConnectionStatus('Verbindungsfehler - Versuche Wiederverbindung...');
+          
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+
+          // Clear any existing timer
+          if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+          }
+
+          // Reconnect after 3 seconds
+          reconnectTimer = setTimeout(() => {
+            connectToSSE();
+          }, 3000);
+        };
+
+      } catch (err) {
+        console.error('Error creating EventSource:', err);
+        setConnectionStatus('Fehler beim Verbindungsaufbau: ' + err.message);
+      }
+    };
+
+    connectToSSE();
+
+    return () => {
+      eventSource.close();
+    }
   }, [])
 
   // Sample data for the table
@@ -47,6 +125,31 @@ export default function Home() {
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const url_chrome_extension_data = async () =>{
+    try{
+      const response = await fetch("/api/url_chrome_extension", {
+        method: "POST",
+        headers:{
+          "Content-Type": "application/json",
+        }
+      })
+
+      const data = await response.json();
+
+      console.log(data.url);
+
+      if(data.success){
+        handle_search(data.url);
+      }
+      else{
+        console.error(`Fehler bei data ${data.error}`);
+      }
+    }
+    catch(err){
+      console.error(err);
     }
   }
 
