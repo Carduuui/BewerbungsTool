@@ -21,7 +21,7 @@ export default function PartnershipTable({ data, onStatusChange, onDelete }) {
     itemName: "",
   })
 
-  const statusOptions = ["Option", "Abgeschickt", "Online Test", "Angenommen", "Abgelehnt"]
+  const statusOptions = ["Option", "Abgeschickt", "Online Test","Bearbeitung", "Auswahltag", "Angenommen", "Abgelehnt"]
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -34,7 +34,11 @@ export default function PartnershipTable({ data, onStatusChange, onDelete }) {
       case "Option":
         return <Badge className="bg-gray-600 hover:bg-gray-700">{status}</Badge>
       case "Online Test":
-        return <Badge className="bg-yellow-600 hover:bg-yellow-700">{status}</Badge>
+        return <Badge className="bg-yellow-600 hover:bg-yellow-600">{status}</Badge>
+        case "Bearbeitung":
+          return <Badge className="bg-yellow-600 hover:bg-yellow-800">{status}</Badge>
+      case "Auswahltag":
+        return <Badge className="bg-yellow-600 hover:bg-yellow-900">{status}</Badge>
       default:
         return <Badge className="bg-gray-600 hover:bg-gray-700">{status}</Badge>
     }
