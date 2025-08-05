@@ -12,6 +12,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Trash2 } from "lucide-react"
 
 export default function PartnershipTable({ data, onStatusChange, onDelete }) {
@@ -48,11 +55,7 @@ export default function PartnershipTable({ data, onStatusChange, onDelete }) {
     }
   }
 
-  const handleStatusClick = (rowId, currentStatus) => {
-    const currentIndex = statusOptions.indexOf(currentStatus)
-    const nextIndex = (currentIndex + 1) % statusOptions.length
-    const newStatus = statusOptions[nextIndex]
-
+  const handleStatusChange = (rowId, newStatus) => {
     if (onStatusChange) {
       onStatusChange(rowId, newStatus)
     }
@@ -97,7 +100,7 @@ export default function PartnershipTable({ data, onStatusChange, onDelete }) {
                 <TableHead className="text-white font-semibold min-w-[120px]">Unternehmen Standort</TableHead>
                 <TableHead className="text-white font-semibold min-w-[120px]">Partnerschule Standort</TableHead>
                 <TableHead className="text-white font-semibold min-w-[200px]">Kernkompetenz Unternehmen</TableHead>
-                <TableHead className="text-white font-semibold min-w-[120px]">Bewerbungsstatus</TableHead>
+                <TableHead className="text-white font-semibold min-w-[150px]">Bewerbungsstatus</TableHead>
                 <TableHead className="text-white font-semibold w-20">Löschen</TableHead>
               </TableRow>
             </TableHeader>
@@ -122,11 +125,26 @@ export default function PartnershipTable({ data, onStatusChange, onDelete }) {
                   <TableCell className="text-gray-300 max-w-[200px] break-words whitespace-normal py-4">
                     {row.kernkompetenz}
                   </TableCell>
-                  <TableCell
-                    className="cursor-pointer py-4"
-                    onClick={() => handleStatusClick(row.customId || row.id, row.bewerbungsstatus)}
-                  >
-                    {getStatusBadge(row.bewerbungsstatus)}
+                  <TableCell className="py-4">
+                    <Select 
+                      value={row.bewerbungsstatus} 
+                      onValueChange={(value) => handleStatusChange(row.customId || row.id, value)}
+                    >
+                      <SelectTrigger className="border-0 bg-transparent p-0 h-auto hover:bg-gray-700 rounded-sm">
+                        {getStatusBadge(row.bewerbungsstatus)}
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-700 border-gray-600">
+                        {statusOptions.map((status) => (
+                          <SelectItem 
+                            key={status} 
+                            value={status}
+                            className="text-gray-200 focus:bg-gray-600 focus:text-white"
+                          >
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell className="py-4">
                     <Button
