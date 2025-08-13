@@ -5,6 +5,8 @@ import PartnershipTable from "./partnership-table"
 import SearchForm from "./search-form"
 import CompanyPopup from "./company-popup"
 import LoadingSpinner from "./loading-spinner"
+import {jsPDF} from "jspdf";
+import {autoTable} from "jspdf-autotable"
 
 export default function Home() {
   const [loading, setLoading] = useState(false)
@@ -528,6 +530,82 @@ export default function Home() {
     }
   }
 
+  const handle_download = () =>{
+    generateTablePDF();
+  }
+
+  const generateTablePDF = () =>{
+    const tableHead = [[
+      'Unternehmen',
+      'Link',
+      'Partnerschule',
+      'Unternehmen Standort',
+      'Partnerschule Standort',
+      'Kernkompetenz Unternehmen',
+      'Bewerbungsstatus'
+    ]]
+
+    const tableBody = sampleData.map((row) =>[
+      row.unternehmen || 'N/A',
+      row.link || 'N/A',
+      row.partnerschule || 'N/A',
+      row.unternehmensStandort || 'N/A',
+      row.partnerschuleStandort || 'N/A',
+      row.kernkompetenz || 'N/A',
+      row.bewerbungsstatus || 'N/A'
+    ])
+
+    try{
+
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+
+      doc.setFontSize(10);
+      doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 14, 30);
+
+      autoTable(doc, {
+        head: tableHead,
+        body: tableBody,
+        startY: 35,
+        theme: 'grid',
+
+        headStyles:{
+          fillColor: [59, 130, 246],
+          textColor: 255,
+          fontSize: 10,
+          fontStyle: 'bold',
+          halign: 'center',
+          valign: 'middle'
+        },
+
+        bodyStyles:{
+          fontSize: 8,
+          textColor: 50
+        },
+        columnStyles: {
+          0: {cellWidth: 45},
+          1: {cellWidth: 50},
+          2: {cellWidth: 40},
+          3: {cellWidth: 40},
+          4: {cellWidth: 60},
+          5: {cellWidth: 30}
+        },
+        margin: {top: 35, left: 14, right: 14},
+        tableWidth: 'wrap',
+
+        styles:{
+          cellPadding: 3,
+          overflow: 'linebreak',
+          fontSize: 8
+        }
+      });
+
+      doc.save('table.pdf')
+      }
+      catch(err){
+        console.error("Fehler bei PDF-Erstellung:", err);
+      }
+  }
+
   return (
     <div className="bg-gray-900 min-h-screen p-10">
       {loading ? (
@@ -536,7 +614,7 @@ export default function Home() {
         </div>
       ) : (
         <>
-          <SearchForm onSearch={handle_search} />
+          <SearchForm onSearch={handle_search} onDownload={handle_download} tableData={sampleData} />
           <PartnershipTable data={sampleData} onStatusChange={handle_status_change} onDelete={handle_delete} />
         </>
       )}

@@ -3,9 +3,10 @@
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search } from "lucide-react"
+import { Search, Download, Mail } from "lucide-react"
 
-export default function SearchForm({ onSearch }) {
+export default function SearchForm({ onSearch, 
+  onDownload, onEmailSend, tableData = [] }) {
   const [searchTerm, setSearchTerm] = useState("")
 
   const handleSearch = () => {
@@ -16,7 +17,19 @@ export default function SearchForm({ onSearch }) {
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter") {
-      handle_search()
+      handleSearch()
+    }
+  }
+
+  const handleDownload = () =>{
+    if(onDownload){
+      onDownload()
+    }
+  }
+
+  const handleEmailSend = () =>{
+    if(onEmailSend){
+      onEmailSend()
     }
   }
 
@@ -36,6 +49,24 @@ export default function SearchForm({ onSearch }) {
         <Button onClick={handleSearch} className="bg-blue-600 hover:bg-blue-700 text-white px-6">
           <Search className="w-4 h-4 mr-2" />
           Suchen
+        </Button>
+        <Button
+          onClick={handleDownload}
+          className="bg-green-600 hover:bg-green-700 text-white px-4"
+          disabled={tableData.length === 0}
+          title="Tabelle als CSV herunterladen"
+        >
+        <Download className="w-4 h-4 mr-2" />
+          Download
+        </Button>
+        <Button
+          onClick={handleEmailSend}
+          className="bg-purple-600 hover:bg-purple-700 text-white px-4"
+          disabled={tableData.length === 0}
+          title="Tabelle per E-Mail senden"
+        >
+        <Mail className="w-4 h-4 mr-2" />
+          E-Mail
         </Button>
       </div>
     </div>
