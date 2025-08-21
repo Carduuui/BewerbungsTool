@@ -558,48 +558,127 @@ export default function Home() {
     try{
 
       const doc = new jsPDF('landscape', 'mm', 'a4');
-
+      
+      // Header mit Titel
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('Duales Studium - Bewerbungsübersicht', 14, 20);
+      
+      // Erstellungsdatum
       doc.setFontSize(10);
-      doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 14, 30);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, 14, 28);
+      
+      // Anzahl Einträge
+      doc.text(`Anzahl Einträge: ${sampleData.length}`, 200, 28);
 
       autoTable(doc, {
         head: tableHead,
         body: tableBody,
         startY: 35,
-        theme: 'grid',
-
-        headStyles:{
-          fillColor: [59, 130, 246],
+        theme: 'striped',
+        
+        headStyles: {
+          fillColor: [37, 99, 235], // Schöneres Blau
           textColor: 255,
-          fontSize: 10,
+          fontSize: 9,
           fontStyle: 'bold',
           halign: 'center',
-          valign: 'middle'
+          valign: 'middle',
+          cellPadding: 4
         },
-
-        bodyStyles:{
+        
+        bodyStyles: {
           fontSize: 8,
-          textColor: 50
-        },
-        columnStyles: {
-          0: {cellWidth: 45},
-          1: {cellWidth: 50},
-          2: {cellWidth: 40},
-          3: {cellWidth: 40},
-          4: {cellWidth: 60},
-          5: {cellWidth: 30}
-        },
-        margin: {top: 35, left: 14, right: 14},
-        tableWidth: 'wrap',
-
-        styles:{
+          textColor: [33, 33, 33],
           cellPadding: 3,
+          valign: 'top'
+        },
+        
+        alternateRowStyles: {
+          fillColor: [248, 250, 252] // Heller Grau für abwechselnde Zeilen
+        },
+        
+        columnStyles: {
+          0: { // Unternehmen
+            cellWidth: 35,
+            fontStyle: 'bold',
+            textColor: [15, 23, 42]
+          },
+          1: { // Link
+            cellWidth: 45,
+            fontSize: 7,
+            textColor: [59, 130, 246]
+          },
+          2: { // Partnerschule
+            cellWidth: 35,
+            fontStyle: 'bold'
+          },
+          3: { // Unternehmen Standort
+            cellWidth: 30,
+            halign: 'center'
+          },
+          4: { // Partnerschule Standort
+            cellWidth: 30,
+            halign: 'center'
+          },
+          5: { // Kernkompetenz
+            cellWidth: 50,
+            fontSize: 7
+          },
+          6: { // Bewerbungsstatus
+            cellWidth: 25,
+            halign: 'center',
+            fontStyle: 'bold'
+          }
+        },
+        
+        // Bedingte Formatierung für Bewerbungsstatus
+        didParseCell: function(data) {
+          if (data.column.index === 6 && data.section === 'body') {
+            const status = data.cell.text[0];
+            if (status === 'Abgeschickt') {
+              data.cell.styles.fillColor = [220, 252, 231]; // Hellgrün
+              data.cell.styles.textColor = [22, 101, 52]; // Dunkelgrün
+            } else if (status === 'Abgelehnt') {
+              data.cell.styles.fillColor = [254, 226, 226]; // Hellrot
+              data.cell.styles.textColor = [153, 27, 27]; // Dunkelrot
+            } else if (status === 'Option') {
+              data.cell.styles.fillColor = [255, 247, 214]; // Hellgelb
+              data.cell.styles.textColor = [146, 64, 14]; // Orange
+            } else if (status === 'Bearbeitung') {
+              data.cell.styles.fillColor = [219, 234, 254]; // Hellblau
+              data.cell.styles.textColor = [30, 64, 175]; // Dunkelblau
+            }
+          }
+        },
+        
+        margin: { top: 35, left: 14, right: 14, bottom: 20 },
+        
+        styles: {
           overflow: 'linebreak',
-          fontSize: 8
+          lineWidth: 0.1,
+          lineColor: [200, 200, 200]
+        },
+        
+        // Footer
+        didDrawPage: function(data) {
+          // Seitenzahl
+          doc.setFontSize(8);
+          doc.text('Seite ' + doc.internal.getNumberOfPages(), 
+                  data.settings.margin.left, 
+                  doc.internal.pageSize.height - 10);
+          
+          // Generiert mit
+          doc.text('Generiert mit Duales Studium Tracker', 
+                  doc.internal.pageSize.width - 80, 
+                  doc.internal.pageSize.height - 10);
         }
       });
 
-      doc.save('table.pdf')
+      // Dateiname mit Datum
+      const today = new Date().toISOString().split('T')[0];
+      doc.save(`Duales_Studium_Bewerbungen_${today}.pdf`);
       }
       catch(err){
         console.error("Fehler bei PDF-Erstellung:", err);
