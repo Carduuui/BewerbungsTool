@@ -534,6 +534,12 @@ export default function Home() {
     generateTablePDF();
   }
 
+  const handle_email_send = () =>{
+    const pdfBase64 = doc.output('datauristring');
+
+    
+  }
+
   const generateTablePDF = () =>{
     const tableHead = [[
       'Unternehmen',
@@ -693,7 +699,7 @@ export default function Home() {
         </div>
       ) : (
         <>
-          <SearchForm onSearch={handle_search} onDownload={handle_download} tableData={sampleData} />
+          <SearchForm onSearch={handle_search} onDownload={handle_download} onEmailSend={handle_email_send} tableData={sampleData} />
           <PartnershipTable data={sampleData} onStatusChange={handle_status_change} onDelete={handle_delete} />
         </>
       )}
