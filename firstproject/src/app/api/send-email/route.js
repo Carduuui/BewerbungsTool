@@ -1,12 +1,13 @@
 const {google} = require('googleapis');
 const fs = require('fs');
 const path = require('path');
-const process = requrie('process');
+const process = require('process');
 const {authenticate} = require('@google-cloud/local-auth');
+import { NextRequest, NextResponse } from 'next/server';
 
 const SCOPES = ['https://www.googleapis.com/auth/gmail.send'];
 const TOKEN_PATH = path.join(process.cwd(), 'token.json');
-const CREDENTIALS = path.join(process.cwd(), 'credentials.json');
+const CREDENTIALS_PATH = path.join(process.cwd(), 'credentials.json');
 
 async function loadSavedCredentialsIfExist(){
     try{
@@ -79,18 +80,19 @@ function createEmail(to, body, pdfBuffer, filename){
         `--${boundary}`
     ];
 
-    return Buffer.from(emailLines.joing('\n')).toString('base64').replace(/\+/g, '-').replace(/\//g, '-');
+    return Buffer.from(emailLines.join('\n')).toString('base64').replace(/\+/g, '-').replace(/\//g, '-');
 
 }
 
-export async function POST(req, res){
+export async function POST(req){
     try{
-        const {to, body, pdfBase64, filename} = req.body;
+        const reqData = await req.json();
+        const {to, body, pdfBase64, filename} = reqData;
 
         if(!to ||!pdfBase64 || !filename){
-            return res.status(400).json({
-                error: 'Fehlende Parameter: to, pdfBase64, filename sind erforderlich'
-            });
+            return NextResponse.json({
+                error: 'Fehlende Parameter: to, pdfBase64, filenmae sind erforderlich'
+            }, {status: 400});
         }
 
         const pdfBuffer = Buffer.from(pdfBase64.split(',')[1], 'base64');
@@ -106,7 +108,7 @@ export async function POST(req, res){
             }
         });
 
-        return res.status(200),json({
+        return NextResponse.json({
             success: true,
             message: 'Email erfolgreich gesendet',
             messageId: result.data.id
@@ -114,9 +116,9 @@ export async function POST(req, res){
     }
     catch(err){
         console.error('Fehler beim Email-Versand:', err);
-        return res.status(500).json({
+        return NextResponse.json({
             success: false,
             error: err.message
-        })
+        }, {status: 500});
     }
 }

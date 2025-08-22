@@ -531,13 +531,45 @@ export default function Home() {
   }
 
   const handle_download = () =>{
-    generateTablePDF();
+    const pdfResult = generateTablePDF();
+    if(pdfResult.success){
+      pdfResult.doc.save(pdfResult.filename);
+    }
   }
 
-  const handle_email_send = () =>{
-    const pdfBase64 = doc.output('datauristring');
+  const handle_email_send = async () =>{
+    const pdfResult = generateTablePDF();
+    const pdfBase64 = pdfResult.doc.output('datauristring');
 
-    
+    const response = await fetch('/api/send-email',{
+      method: 'POST',
+      headers:{
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        to: "lachs.berol@gmail.com",
+        subject: "Duales Studium Bewerbugnstabelle",
+        body: `<h2>Duales Studium - Bewerbungsübersicht</h2>
+          <p>Hallo,</p>
+          <p>anbei findest du die aktuelle Bewerbungsübersicht als PDF.</p>
+          <p><strong>Statistiken:</strong></p>
+          <ul>
+            <li>Gesamt: ${sampleData.length} Bewerbungen</li>
+            <li>Abgeschickt: ${sampleData.filter(row => row.bewerbungsstatus === 'Abgeschickt').length}</li>
+            <li>Optionen: ${sampleData.filter(row => row.bewerbungsstatus === 'Option').length}</li>
+            <li>In Bearbeitung: ${sampleData.filter(row => row.bewerbungsstatus === 'Bearbeitung').length}</li>
+          </ul>
+          <p>Beste Grüße<br>Dein Bewerbungstracker</p>`,
+          pdfBase64: pdfBase64,
+          filename: pdfResult.filename
+      })
+    });
+
+    const result = await response.json();
+
+    if(!result.success){
+      console.error('Email-Versand fehlgeschlagen:', result.error);
+    }
   }
 
   const generateTablePDF = () =>{
@@ -684,7 +716,12 @@ export default function Home() {
 
       // Dateiname mit Datum
       const today = new Date().toISOString().split('T')[0];
-      doc.save(`Duales_Studium_Bewerbungen_${today}.pdf`);
+
+      return {
+        success: true,
+        doc: doc,
+        filename: `Duales_Studium_Bewerbungen_${today}.pdf`
+      }
       }
       catch(err){
         console.error("Fehler bei PDF-Erstellung:", err);
