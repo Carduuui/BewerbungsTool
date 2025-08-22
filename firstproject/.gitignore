@@ -42,6 +42,7 @@ next-env.d.ts
 
 #Google API & Gmail Credentials
 credentials.json
-token.js
+token.json
 client_secret.json
 service_account.json
+temp_credentials.json

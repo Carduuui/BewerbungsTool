@@ -1,5 +1,5 @@
 const {google} = require('googleapis');
-const fs = require('fs');
+const fs = require('fs').promises;
 const path = require('path');
 const process = require('process');
 const {authenticate} = require('@google-cloud/local-auth');
@@ -51,6 +51,7 @@ async function authorize(){
 async function createGmailClient(auth){
     try{
         const gmail = google.gmail({version: 'v1', auth});
+        return gmail;
     }
     catch(err){
         throw new Error(`Gmail-Client konnte nicht erstellt werden: ${err.message}`);
@@ -74,10 +75,11 @@ function createEmail(to, body, pdfBuffer, filename){
         `--${boundary}`,
         `Content-Type: application/pdf; name="${filename}"`,
         `Content_disposition: attachment; filename="${filename}"`,
+        "Content-Transfer-Encoding: base64",
         "",
         pdfBuffer.toString('base64'),
         "",
-        `--${boundary}`
+        `--${boundary}--`
     ];
 
     return Buffer.from(emailLines.join('\n')).toString('base64').replace(/\+/g, '-').replace(/\//g, '-');
@@ -97,7 +99,8 @@ export async function POST(req){
 
         const pdfBuffer = Buffer.from(pdfBase64.split(',')[1], 'base64');
 
-        const gmail = await authorize().then(createGmailClient).catch(console.error);
+        const auth = await authorize();
+        const gmail = await createGmailClient(auth);
         
         const rawMessage = createEmail(to, body, pdfBuffer, filename);
 
