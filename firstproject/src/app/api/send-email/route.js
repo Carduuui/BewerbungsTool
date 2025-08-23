@@ -1,5 +1,5 @@
-const {google} = require('googleapis');
-const fs = require('fs').promises;
+import {google} from 'googleapis';
+import fs from 'fs/promises';
 const path = require('path');
 const process = require('process');
 const {authenticate} = require('@google-cloud/local-auth');
@@ -38,6 +38,7 @@ async function authorize(){
     if(client){
         return client;
     }
+    console.log("Credentials_path", CREDENTIALS_PATH);
     client = await authenticate({
         scopes: SCOPES,
         keyfilePath: CREDENTIALS_PATH,
